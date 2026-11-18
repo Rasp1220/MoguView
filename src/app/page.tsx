@@ -1,4 +1,4 @@
-import Logo from "@/components/Logo";
+import Image from "next/image";
 import SearchBar from "@/components/SearchBar";
 import VideoSlider from "@/components/VideoSlider";
 import { SLIDER_CATEGORIES } from "@/lib/tags";
@@ -10,7 +10,14 @@ export default function HomePage() {
   return (
     <div className="flex flex-col gap-10 py-2">
       <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-5 pt-2 text-center">
-        <Logo size="lg" />
+        <Image
+          src="/images/logo-top.png"
+          alt="モグビュー"
+          width={1254}
+          height={1254}
+          priority
+          className="mx-auto w-full max-w-[16rem] mix-blend-multiply sm:max-w-xs"
+        />
         <div className="space-y-1.5">
           <h1 className="text-xl font-bold text-stone-800 sm:text-2xl">
             食べたい料理の動画を、まるごと探そう
