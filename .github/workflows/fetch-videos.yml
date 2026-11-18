@@ -1,0 +1,31 @@
+name: Fetch videos
+
+on:
+  schedule:
+    # 毎日08:30 UTC（日本時間 17:30）。YouTube APIの1日クォータは太平洋時間0:00
+    # （日本時間16:00〜17:00）にリセットされるため、その直後に走らせる。
+    - cron: "30 8 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Call fetch-videos endpoint until quota is used up
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          # 1回の呼び出しは約2,400ユニット（20ページ）。1日クォータ10,000のうち
+          # 約9,600ユニット分（4回）まで進め、quotaExhausted / done なら即終了する。
+          for i in 1 2 3 4; do
+            status=$(curl -s -o response.json -w "%{http_code}" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              "${APP_BASE_URL}/api/cron/fetch-videos?budget=2400")
+            echo "[$i] HTTP $status"; cat response.json; echo
+            if [ "$status" -ge 300 ]; then exit 1; fi
+            if jq -e '.done == true or .quotaExhausted == true' response.json > /dev/null; then break; fi
+            # 予算内で終わらなかった以外の停止理由（DBエラー等）はそこで打ち切る
+            if jq -e '.stopReason != null and .stopReason != "budget"' response.json > /dev/null; then exit 1; fi
+          done
