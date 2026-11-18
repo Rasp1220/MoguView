@@ -16,7 +16,7 @@ export default function HomePage() {
           width={1254}
           height={1254}
           priority
-          className="mx-auto w-full max-w-[16rem] mix-blend-multiply sm:max-w-xs"
+          className="mx-auto w-full max-w-[16rem] sm:max-w-xs"
         />
         <div className="space-y-1.5">
           <h1 className="text-xl font-bold text-stone-800 sm:text-2xl">
