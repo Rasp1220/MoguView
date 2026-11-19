@@ -18,6 +18,11 @@ create table if not exists public.videos (
   fetched_at timestamptz not null default now()
 );
 
+-- 説明文から抜き出した材料・作り方（{"ingredients":[{"name","amount"}],"steps":[...]}）。
+-- null = 未取得（取り込みバッチが少しずつ補完する）、中身が空 = 説明文から読み取れなかった
+alter table public.videos add column if not exists recipe jsonb;
+create index if not exists videos_recipe_pending_idx on public.videos (video_id) where recipe is null;
+
 create index if not exists videos_title_trgm_idx on public.videos using gin (title gin_trgm_ops);
 create index if not exists videos_channel_trgm_idx on public.videos using gin (channel_title gin_trgm_ops);
 create index if not exists videos_tags_idx on public.videos using gin (tags);

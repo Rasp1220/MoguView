@@ -4,7 +4,7 @@ export default function Logo({ size = "md" }: { size?: "md" | "lg" }) {
   return (
     <Link
       href="/"
-      className={`inline-flex items-center gap-2 font-extrabold tracking-tight text-brand-600 ${
+      className={`inline-flex flex-shrink-0 items-center gap-2 whitespace-nowrap font-extrabold tracking-tight text-brand-600 ${
         size === "lg" ? "text-4xl sm:text-5xl" : "text-xl"
       }`}
       aria-label="モグビュー トップへ"
