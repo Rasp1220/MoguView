@@ -93,6 +93,8 @@ export interface VideoDetails {
   viewCount: number;
   categoryId: number | null;
   durationSeconds: number | null;
+  /** videos.list の説明文（search.list のものと違い全文）。材料・作り方の抽出に使う。 */
+  description: string;
 }
 
 export function parseIso8601Duration(duration: string | undefined | null): number | null {
@@ -121,6 +123,7 @@ export async function fetchVideoDetails(
         viewCount: Number.isFinite(views) ? views : 0,
         categoryId: Number.isFinite(cat) ? cat : null,
         durationSeconds: parseIso8601Duration(item.contentDetails?.duration),
+        description: (item.snippet?.description ?? "") as string,
       });
     }
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Video } from "@/lib/types";
+import { useMade, useShopping } from "@/lib/localStore";
 import { useVideoPlayer } from "./VideoPlayer";
 
 function formatViews(n: number): string {
@@ -10,6 +11,8 @@ function formatViews(n: number): string {
 
 export default function VideoCard({ video }: { video: Video }) {
   const { open } = useVideoPlayer();
+  const made = useMade()[video.videoId];
+  const inList = useShopping().videos.some((v) => v.videoId === video.videoId);
   return (
     <button
       type="button"
@@ -25,6 +28,16 @@ export default function VideoCard({ video }: { video: Video }) {
           loading="lazy"
           className="h-full w-full object-cover transition group-hover:scale-105"
         />
+        {(made || inList) && (
+          <div className="absolute left-2 top-2 flex gap-1">
+            {made && (
+              <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white shadow">✔ 作った</span>
+            )}
+            {inList && (
+              <span className="rounded-full bg-brand-600 px-2 py-0.5 text-xs font-bold text-white shadow">🛒</span>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <h3 className="line-clamp-2 text-sm font-semibold text-stone-800">{video.title}</h3>

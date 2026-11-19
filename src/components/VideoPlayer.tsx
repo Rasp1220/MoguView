@@ -2,6 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Video } from "@/lib/types";
+import RecipePanel from "./RecipePanel";
+import VideoActions from "./VideoActions";
 
 const PlayerContext = createContext<{ open: (video: Video) => void }>({ open: () => {} });
 
@@ -36,7 +38,7 @@ export function VideoPlayerProvider({ children }: { children: React.ReactNode })
           onClick={() => setVideo(null)}
         >
           <div
-            className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="max-h-[92vh] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="aspect-video w-full bg-black">
@@ -64,6 +66,8 @@ export function VideoPlayerProvider({ children }: { children: React.ReactNode })
                   ))}
                 </div>
               )}
+              <VideoActions video={video} />
+              <RecipePanel video={video} />
               <div className="flex justify-end gap-3 pt-1 text-sm">
                 <a
                   href={`https://www.youtube.com/watch?v=${video.videoId}`}

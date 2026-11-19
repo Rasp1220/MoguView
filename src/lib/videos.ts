@@ -1,5 +1,6 @@
 import { getReadClient } from "./supabase";
 import { searchSampleVideos, countSampleVideos } from "./sampleData";
+import type { Recipe } from "./recipe";
 import type { Video, VideoSort } from "./types";
 
 interface VideoRow {
@@ -11,6 +12,7 @@ interface VideoRow {
   published_at: string | null;
   view_count: number;
   tags: string[] | null;
+  recipe: Recipe | null;
 }
 
 function toVideo(row: VideoRow): Video {
@@ -23,6 +25,7 @@ function toVideo(row: VideoRow): Video {
     description: row.description,
     viewCount: Number(row.view_count) || 0,
     tags: row.tags ?? [],
+    recipe: row.recipe ?? null,
   };
 }
 

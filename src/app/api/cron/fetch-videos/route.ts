@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase";
 import { detectTags } from "@/lib/tags";
+import { extractRecipe } from "@/lib/recipe";
 import {
   EXCLUDED_CATEGORY_IDS,
   GENERIC_FOOD_WORDS,
@@ -37,6 +38,8 @@ const MAX_BUDGET = 9500; // 1日クォータ10,000に対する安全上限
 const DESCRIPTION_MAX_LENGTH = 150; // DB容量節約のため説明文は先頭150文字だけ保存
 // 1ページ（最大50件）のうち新規がこれ未満なら、そのキューは掘り尽くしたとみなす
 const MIN_NEW_PER_PAGE = 3;
+// 材料・作り方が未取得の既存動画を、1回の呼び出しで補完する最大件数（50件=1ユニット）
+const RECIPE_BACKFILL_LIMIT = 500;
 
 interface QueueRow {
   id: string;
@@ -45,6 +48,36 @@ interface QueueRow {
   next_page_token: string | null;
   pages_fetched: number;
   videos_added: number;
+}
+
+
+/**
+ * 材料・作り方が未取得（recipe が null）の既存動画を補完する。
+ * videos.list は50件で1ユニットなので、500件でも10ユニットしか使わない。
+ * 説明文から読み取れなかった動画は空のレシピを入れ、次回以降は対象外にする。
+ */
+async function backfillRecipes(
+  supabase: NonNullable<ReturnType<typeof getAdminClient>>,
+  apiKey: string,
+): Promise<{ updated: number; units: number }> {
+  const { data, error } = await supabase
+    .from("videos")
+    .select("video_id")
+    .is("recipe", null)
+    .limit(RECIPE_BACKFILL_LIMIT);
+  if (error || !data || data.length === 0) return { updated: 0, units: 0 };
+
+  const ids = data.map((r) => r.video_id as string);
+  const details = await fetchVideoDetails(ids, apiKey);
+  const units = Math.ceil(ids.length / VIDEOS_BATCH) * VIDEOS_UNITS;
+  let updated = 0;
+  for (const id of ids) {
+    // 非公開・削除された動画は details に無い。空のレシピにして再取得を止める
+    const recipe = extractRecipe(details.get(id)?.description);
+    const { error: updateError } = await supabase.from("videos").update({ recipe }).eq("video_id", id);
+    if (!updateError) updated++;
+  }
+  return { updated, units };
 }
 
 export async function GET(request: NextRequest) {
@@ -80,7 +113,13 @@ export async function GET(request: NextRequest) {
     .select("video_id", { count: "exact", head: true });
   if (countError) return NextResponse.json({ error: countError.message }, { status: 500 });
   if ((currentCount ?? 0) >= maxVideos) {
-    return NextResponse.json({ done: true, reason: `目標の${maxVideos}件に到達済みです`, totalVideos: currentCount });
+    const recipes = await backfillRecipes(supabase, apiKey).catch(() => null);
+    return NextResponse.json({
+      done: true,
+      reason: `目標の${maxVideos}件に到達済みです`,
+      totalVideos: currentCount,
+      recipesBackfilled: recipes?.updated ?? 0,
+    });
   }
 
   // 1) キューの初期登録（既存行は触らない = 進捗を保持）
@@ -108,10 +147,12 @@ export async function GET(request: NextRequest) {
 
   const queue = (queueRows ?? []) as QueueRow[];
   if (queue.length === 0) {
+    const recipes = await backfillRecipes(supabase, apiKey).catch(() => null);
     return NextResponse.json({
       done: true,
       reason: "すべての検索キューを取得し終えました",
       totalVideos: currentCount,
+      recipesBackfilled: recipes?.updated ?? 0,
     });
   }
 
@@ -179,6 +220,7 @@ export async function GET(request: NextRequest) {
               duration_seconds: detail?.durationSeconds ?? null,
               category_id: detail?.categoryId ?? null,
               tags,
+              recipe: extractRecipe(detail?.description ?? item.description),
               fetched_at: new Date().toISOString(),
             };
           })
@@ -216,6 +258,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // 材料・作り方が未取得の既存動画を補完（クォータが残っているときだけ）
+  let recipesBackfilled = 0;
+  if (!quotaExhausted && unitsUsed + 10 <= budget) {
+    const recipes = await backfillRecipes(supabase, apiKey).catch(() => null);
+    recipesBackfilled = recipes?.updated ?? 0;
+    unitsUsed += recipes?.units ?? 0;
+  }
+
   const { count: totalVideos } = await supabase
     .from("videos")
     .select("video_id", { count: "exact", head: true });
@@ -225,6 +275,7 @@ export async function GET(request: NextRequest) {
     videosAdded: added,
     totalVideos,
     unitsUsed,
+    recipesBackfilled,
     stopReason,
     // true の間は、同じ日にこれ以上呼んでも進まない（翌日のクォータリセット待ち）
     quotaExhausted,
