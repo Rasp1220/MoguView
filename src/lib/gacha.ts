@@ -3,8 +3,8 @@ import { hasIngredients } from "./recipe";
 import type { Video } from "./types";
 import { searchVideos } from "./videos";
 
-const POOL_SIZE = 20;
-const KEYWORD_TRIES = 4;
+// 人気順の上位この件数からランダムに選ぶ
+const POOL_SIZE = 40;
 
 function shuffle<T>(items: T[]): T[] {
   const a = [...items];
@@ -17,19 +17,16 @@ function shuffle<T>(items: T[]): T[] {
 
 /**
  * 指定した役割の動画を1本ランダムに引く。
- * 料理キーワードをランダムに選び、人気順の上位の中からランダムな位置の20件を候補にする。
+ * 料理キーワードをランダムな順に試し、人気順の上位40件から1本選ぶ。
+ * 実データで0〜1件しかないキーワードもあるため、見つかるまで全キーワードを試す。
  * 材料が読み取れている動画があれば優先する（そのまま買い物リストに入れられるため）。
  */
 export async function drawVideo(role: GachaRole, excludeIds: Set<string>): Promise<Video | null> {
   const def = GACHA_ROLES.find((r) => r.role === role);
   if (!def) return null;
 
-  for (const keyword of shuffle(def.keywords).slice(0, KEYWORD_TRIES)) {
-    const offset = Math.floor(Math.random() * 40);
-    let pool = await searchVideos({ query: keyword, sort: "view_count", limit: POOL_SIZE, offset }).catch(() => []);
-    if (pool.length === 0 && offset > 0) {
-      pool = await searchVideos({ query: keyword, sort: "view_count", limit: POOL_SIZE }).catch(() => []);
-    }
+  for (const keyword of shuffle(def.keywords)) {
+    const pool = await searchVideos({ query: keyword, sort: "view_count", limit: POOL_SIZE }).catch(() => []);
     const candidates = pool.filter((v) => !excludeIds.has(v.videoId));
     if (candidates.length === 0) continue;
     const withRecipe = candidates.filter((v) => hasIngredients(v.recipe));

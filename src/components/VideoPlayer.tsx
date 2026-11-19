@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Video } from "@/lib/types";
 import RecipePanel from "./RecipePanel";
@@ -14,6 +15,12 @@ export function VideoPlayerProvider({ children }: { children: React.ReactNode })
   const [video, setVideo] = useState<Video | null>(null);
   const open = useCallback((v: Video) => setVideo(v), []);
   const value = useMemo(() => ({ open }), [open]);
+  const pathname = usePathname();
+
+  // モーダル内のリンク（「リストを見る」など）で画面を移ったら閉じる
+  useEffect(() => {
+    setVideo(null);
+  }, [pathname]);
 
   useEffect(() => {
     if (!video) return;

@@ -6,6 +6,7 @@
  * localStorage が使えない環境（プライベートモード等）では、そのタブの間だけメモリに持つ。
  */
 import { useSyncExternalStore } from "react";
+import type { Recipe } from "./recipe";
 import type { Video } from "./types";
 
 const SHOPPING_KEY = "moguview:shopping:v1";
@@ -25,20 +26,53 @@ function readRaw(key: string): string | null {
   }
 }
 
-function read<T>(key: string, fallback: T): T {
+/**
+ * 保存値を読み出す。古い形式・手で書き換えられた値などで形が合わなければ
+ * normalize が直す（直せない部分は捨てる）ので、画面がクラッシュしない。
+ */
+function read<T>(key: string, fallback: T, normalize: (v: unknown) => T): T {
   const raw = readRaw(key);
   const hit = parsed.get(key);
   if (hit && hit.raw === raw) return hit.value as T;
   let value: T = fallback;
   if (raw) {
     try {
-      value = JSON.parse(raw) as T;
+      value = normalize(JSON.parse(raw));
     } catch {
       value = fallback;
     }
   }
   parsed.set(key, { raw, value });
   return value;
+}
+
+// ───────── 保存値の検証 ─────────
+
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+const strArray = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+
+function toRecipe(v: unknown): Recipe | null {
+  if (!isObj(v)) return null;
+  const ingredients = Array.isArray(v.ingredients)
+    ? v.ingredients.filter(isObj).map((i) => ({ name: str(i.name), amount: str(i.amount) })).filter((i) => i.name)
+    : [];
+  return { ingredients, steps: strArray(v.steps) };
+}
+
+function toVideo(v: unknown): Video | null {
+  if (!isObj(v) || !str(v.videoId)) return null;
+  return {
+    videoId: str(v.videoId),
+    title: str(v.title),
+    channelTitle: str(v.channelTitle),
+    thumbnailUrl: str(v.thumbnailUrl),
+    publishedAt: str(v.publishedAt),
+    description: str(v.description),
+    viewCount: typeof v.viewCount === "number" ? v.viewCount : 0,
+    tags: strArray(v.tags),
+    recipe: toRecipe(v.recipe),
+  };
 }
 
 function write<T>(key: string, value: T): void {
@@ -64,10 +98,10 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-function useStore<T>(key: string, fallback: T): T {
+function useStore<T>(key: string, fallback: T, normalize: (v: unknown) => T): T {
   return useSyncExternalStore(
     subscribe,
-    () => read(key, fallback),
+    () => read(key, fallback, normalize),
     () => fallback,
   );
 }
@@ -85,8 +119,19 @@ export interface ShoppingState {
 
 const EMPTY_SHOPPING: ShoppingState = { videos: [], checked: [], extras: [] };
 
-export const useShopping = () => useStore(SHOPPING_KEY, EMPTY_SHOPPING);
-const getShopping = () => read(SHOPPING_KEY, EMPTY_SHOPPING);
+function normalizeShopping(v: unknown): ShoppingState {
+  if (!isObj(v)) return EMPTY_SHOPPING;
+  return {
+    videos: Array.isArray(v.videos) ? v.videos.map(toVideo).filter((x): x is Video => !!x) : [],
+    checked: strArray(v.checked),
+    extras: Array.isArray(v.extras)
+      ? v.extras.filter(isObj).map((e) => ({ id: str(e.id), name: str(e.name) })).filter((e) => e.id && e.name)
+      : [],
+  };
+}
+
+export const useShopping = () => useStore(SHOPPING_KEY, EMPTY_SHOPPING, normalizeShopping);
+const getShopping = () => read(SHOPPING_KEY, EMPTY_SHOPPING, normalizeShopping);
 
 export function addToShopping(...videos: Video[]): void {
   const cur = getShopping();
@@ -141,8 +186,20 @@ export interface MadeEntry {
 export type MadeState = Record<string, MadeEntry>;
 const EMPTY_MADE: MadeState = {};
 
-export const useMade = () => useStore(MADE_KEY, EMPTY_MADE);
-const getMade = () => read(MADE_KEY, EMPTY_MADE);
+function normalizeMade(v: unknown): MadeState {
+  if (!isObj(v)) return EMPTY_MADE;
+  const out: MadeState = {};
+  for (const e of Object.values(v)) {
+    if (!isObj(e)) continue;
+    const video = toVideo(e.video);
+    if (!video || !str(e.madeAt)) continue;
+    out[video.videoId] = { video, madeAt: str(e.madeAt), memo: str(e.memo) };
+  }
+  return out;
+}
+
+export const useMade = () => useStore(MADE_KEY, EMPTY_MADE, normalizeMade);
+const getMade = () => read(MADE_KEY, EMPTY_MADE, normalizeMade);
 
 export function markMade(video: Video): void {
   const cur = getMade();

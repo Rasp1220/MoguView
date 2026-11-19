@@ -53,7 +53,8 @@ function parseHeader(line: string): { kind: Kind; inline: string } | null {
     rest = rest.replace(closers, "").replace(/^\([^)]*\)/, "").replace(closers, "");
     const colon = /^[:]\s*/.exec(rest);
     if (colon) return { kind, inline: rest.slice(colon[0].length).trim() };
-    if (rest.length <= 8) return { kind, inline: "" }; // 「2人分」程度の付記
+    // 「2人分」「4人前」程度の付記だけなら見出し。「材料費500円」のような語は見出しにしない
+    if (/^[\p{P}\p{S}\s\d約人分前個枚本皿台号用~]*$/u.test(rest)) return { kind, inline: "" };
     return null;
   }
   return null;
@@ -99,7 +100,7 @@ function parseIngredient(raw: string): Ingredient | "group" | null {
   if (delim && delim.index > 0) {
     name = s.slice(0, delim.index);
     amount = s.slice(delim.index + delim[0].length);
-  } else if (spaced && LOOKS_LIKE_AMOUNT.test(spaced[2]) && /^(?:\d|適|少|ひとつ|お好|大さじ|小さじ|カップ)/.test(spaced[2])) {
+  } else if (spaced && LOOKS_LIKE_AMOUNT.test(spaced[2]) && /^(?:\d|各|適|少|ひとつ|お好|大さじ|小さじ|カップ)/.test(spaced[2])) {
     // 「鶏もも肉 1枚(300g)」のように分量のあとに括弧が付く書き方もここで拾う
     name = spaced[1];
     amount = spaced[2];
@@ -148,7 +149,7 @@ export function extractRecipe(description: string | null | undefined): Recipe {
   };
   const addStep = (text: string) => {
     const step = text.replace(STEP_NUMBER, "").trim();
-    if (step.length < 3 || steps.length >= MAX_STEPS) return;
+    if (step.length < 2 || steps.length >= MAX_STEPS) return;
     steps.push(step.slice(0, MAX_STEP_LENGTH));
   };
   const close = () => {

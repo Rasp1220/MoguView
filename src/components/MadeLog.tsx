@@ -12,8 +12,12 @@ export default function MadeLog() {
     () => Object.values(made).sort((a, b) => b.madeAt.localeCompare(a.madeAt)),
     [made],
   );
-  const thisMonth = new Date().toISOString().slice(0, 7);
-  const monthCount = entries.filter((e) => e.madeAt.startsWith(thisMonth)).length;
+  // madeAt はUTCのISO文字列なので、端末の時刻（日本なら日本時間）で月を比べる
+  const now = new Date();
+  const monthCount = entries.filter((e) => {
+    const d = new Date(e.madeAt);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">

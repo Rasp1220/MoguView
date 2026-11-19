@@ -37,7 +37,7 @@ export default function HomePage() {
         href="/gacha"
         className="mx-auto flex w-full max-w-3xl items-center gap-4 rounded-2xl border border-brand-200 bg-gradient-to-r from-brand-50 to-amber-50 px-5 py-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
       >
-        <span className="text-4xl" aria-hidden>
+        <span className="text-3xl sm:text-4xl" aria-hidden>
           🎰
         </span>
         <span className="flex-1">
@@ -46,7 +46,7 @@ export default function HomePage() {
             主菜・副菜・汁物を、ボタン1つでランダムに提案。材料はそのまま買い物リストへ。
           </span>
         </span>
-        <span className="flex-shrink-0 text-sm font-semibold text-brand-600">回してみる →</span>
+        <span className="hidden flex-shrink-0 text-sm font-semibold text-brand-600 sm:inline">回してみる →</span>
       </Link>
 
       <section aria-label={`${month}月の特集`} className="space-y-6">

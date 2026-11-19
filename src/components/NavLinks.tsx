@@ -16,16 +16,17 @@ export default function NavLinks() {
   const shoppingCount = useShopping().videos.length;
   const madeCount = Object.keys(useMade()).length;
   const link = "whitespace-nowrap hover:text-brand-600";
+  // スマホではロゴの下の2段目に置き、収まらなければ横スクロール。sm以上はロゴの右に並べる
   return (
-    <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm font-medium text-stone-600">
+    <nav className="no-scrollbar -mx-4 flex w-[calc(100%+2rem)] items-center gap-3 overflow-x-auto px-4 text-sm font-medium text-stone-600 sm:mx-0 sm:w-auto sm:gap-4 sm:overflow-visible sm:px-0">
       <Link href="/search" className={link}>
         さがす
       </Link>
       <Link href="/season" className={link}>
-        季節特集
+        季節<span className="hidden sm:inline">特集</span>
       </Link>
       <Link href="/gacha" className={link}>
-        献立ガチャ
+        <span className="hidden sm:inline">献立</span>ガチャ
       </Link>
       <Link href="/shopping" className={link}>
         🛒 買い物
