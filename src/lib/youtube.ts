@@ -11,6 +11,8 @@ export const SEARCH_UNITS = 100;
 export const VIDEOS_UNITS = 1;
 export const VIDEOS_BATCH = 50;
 
+const QUOTA_REASONS = new Set(["quotaExceeded", "dailyLimitExceeded", "rateLimitExceeded"]);
+
 export class YouTubeError extends Error {
   constructor(
     message: string,
@@ -22,7 +24,11 @@ export class YouTubeError extends Error {
 
   /** 1日のクォータを使い切った（翌日のリセットまで再開できない）。 */
   get isQuotaExceeded(): boolean {
-    return this.reason === "quotaExceeded" || this.reason === "dailyLimitExceeded";
+    // 理由コードはAPIの種類で変わる（"quotaExceeded" / "dailyLimitExceeded" /
+    // "rateLimitExceeded" など）。検索の1日上限は "Quota exceeded for quota metric
+    // 'Search Queries' ..." というメッセージで返るため、文言でも判定する。
+    if (this.reason && QUOTA_REASONS.has(this.reason)) return true;
+    return (this.status === 403 || this.status === 429) && /quota/i.test(this.message);
   }
 }
 
