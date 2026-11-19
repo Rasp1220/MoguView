@@ -3,8 +3,9 @@ import SearchBar from "@/components/SearchBar";
 import VideoSlider from "@/components/VideoSlider";
 import { SLIDER_CATEGORIES } from "@/lib/tags";
 
-// 取り込みは1日単位なので、トップは5分キャッシュで十分
-export const revalidate = 300;
+// DB取得は no-store なので、毎リクエスト描画にそろえる（revalidate と混在させると
+// 本番の再生成時に「静的→動的に変わった」エラーになることがある）
+export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (

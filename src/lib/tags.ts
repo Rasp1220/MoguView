@@ -23,6 +23,8 @@ export const SLIDER_CATEGORIES: SliderCategory[] = [
 export interface TagDefinition {
   tag: string;
   keywords: string[];
+  /** 判定前に本文から取り除く語（「フライパン」が「パン」に当たる等の誤判定よけ）。 */
+  excludes?: string[];
 }
 
 export const TAG_DEFINITIONS: TagDefinition[] = [
@@ -89,6 +91,7 @@ export const TAG_DEFINITIONS: TagDefinition[] = [
   {
     tag: "パン",
     keywords: ["パン", "食パン", "サンドイッチ", "サンドウィッチ", "ベーグル", "クロワッサン", "バゲット", "ホットサンド", "ベーカリー"],
+    excludes: ["フライパン", "パンケーキ", "パン粉", "ワンパン", "ジャパン", "パンダ", "パンチ", "パンツ", "パンプキン", "パンナコッタ"],
   },
   {
     tag: "カフェ",
@@ -126,9 +129,10 @@ export const ALL_TAGS: string[] = [
 
 const DESCRIPTION_SCAN_LENGTH = 150;
 
-function matches(text: string, keywords: string[]): boolean {
-  const lower = text.toLowerCase();
-  return keywords.some((k) => lower.includes(k.toLowerCase()));
+function matches(text: string, def: TagDefinition): boolean {
+  let lower = text.toLowerCase();
+  for (const ex of def.excludes ?? []) lower = lower.split(ex.toLowerCase()).join(" ");
+  return def.keywords.some((k) => lower.includes(k.toLowerCase()));
 }
 
 /**
@@ -137,5 +141,5 @@ function matches(text: string, keywords: string[]): boolean {
  */
 export function detectTags(title: string, description = ""): string[] {
   const text = `${title}\n${description.slice(0, DESCRIPTION_SCAN_LENGTH)}`;
-  return TAG_DEFINITIONS.filter((def) => matches(text, def.keywords)).map((d) => d.tag);
+  return TAG_DEFINITIONS.filter((def) => matches(text, def)).map((d) => d.tag);
 }

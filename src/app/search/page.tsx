@@ -25,7 +25,8 @@ function buildHref(p: { q: string; tag: string; sort: VideoSort; page?: number }
   if (p.tag) params.set("tag", p.tag);
   if (p.sort !== "view_count") params.set("sort", p.sort);
   if (p.page && p.page > 1) params.set("page", String(p.page));
-  return `/search${params.size ? `?${params}` : ""}`;
+  const qs = params.toString();
+  return qs ? `/search?${qs}` : "/search";
 }
 
 export default async function SearchPage({ searchParams }: Props) {

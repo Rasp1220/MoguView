@@ -21,7 +21,9 @@ export default function SearchBar({
     if (query.trim()) params.set("q", query.trim());
     if (tag) params.set("tag", tag);
     if (sort) params.set("sort", sort);
-    router.push(`/search${params.size ? `?${params}` : ""}`);
+    // URLSearchParams.size は iOS 16 以前の Safari に無いため toString() で判定する
+    const qs = params.toString();
+    router.push(qs ? `/search?${qs}` : "/search");
   }
 
   return (
