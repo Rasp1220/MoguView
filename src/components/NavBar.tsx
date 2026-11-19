@@ -7,9 +7,6 @@ export default function NavBar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <Logo />
         <nav className="flex items-center gap-5 text-sm font-medium text-stone-600">
-          <Link href="/search?sort=published_at" className="hover:text-brand-600">
-            新着
-          </Link>
           <Link href="/search" className="hover:text-brand-600">
             さがす
           </Link>

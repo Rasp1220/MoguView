@@ -1,5 +1,4 @@
 import Image from "next/image";
-import SearchBar from "@/components/SearchBar";
 import VideoSlider from "@/components/VideoSlider";
 import { SLIDER_CATEGORIES } from "@/lib/tags";
 
@@ -27,7 +26,6 @@ export default function HomePage() {
             モグ（食べる）× ビュー（見る）。タイトルでもタグでも検索できます。
           </p>
         </div>
-        <SearchBar />
       </div>
 
       {SLIDER_CATEGORIES.map((category) => (
