@@ -17,17 +17,17 @@ export default function Pagination({
     else if (pages[pages.length - 1] !== "…") pages.push("…");
   }
 
-  const base = "min-w-9 rounded-full border px-3 py-1.5 text-center text-sm font-medium";
+  const base = "min-w-9 rounded-md border px-3 py-1.5 text-center text-sm font-medium transition-colors";
   return (
     <nav aria-label="ページ送り" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
       {page > 1 && (
-        <Link href={hrefFor(page - 1)} className={`${base} border-brand-200 text-stone-600 hover:border-brand-500`}>
+        <Link href={hrefFor(page - 1)} className={`${base} bg-card text-muted-foreground hover:bg-accent`}>
           前へ
         </Link>
       )}
       {pages.map((p, i) =>
         p === "…" ? (
-          <span key={`gap-${i}`} className="px-1 text-stone-400">
+          <span key={`gap-${i}`} className="px-1 text-muted-foreground">
             …
           </span>
         ) : (
@@ -37,8 +37,8 @@ export default function Pagination({
             aria-current={p === page ? "page" : undefined}
             className={`${base} ${
               p === page
-                ? "border-brand-600 bg-brand-600 text-white"
-                : "border-brand-200 text-stone-600 hover:border-brand-500"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground hover:bg-accent"
             }`}
           >
             {p}
@@ -46,7 +46,7 @@ export default function Pagination({
         ),
       )}
       {page < totalPages && (
-        <Link href={hrefFor(page + 1)} className={`${base} border-brand-200 text-stone-600 hover:border-brand-500`}>
+        <Link href={hrefFor(page + 1)} className={`${base} bg-card text-muted-foreground hover:bg-accent`}>
           次へ
         </Link>
       )}
