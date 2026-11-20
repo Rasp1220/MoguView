@@ -50,7 +50,7 @@ export default function HomePage() {
           width={1254}
           height={1254}
           priority
-          className="mx-auto hidden w-48 md:block lg:w-60"
+          className="order-first mx-auto w-40 md:order-none md:w-48 lg:w-60"
         />
       </section>
 
