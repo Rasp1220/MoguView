@@ -7,9 +7,39 @@ body {
   height: 100%;
 }
 
-body {
-  background-color: #fffaf7;
-  color: #292524;
+@layer base {
+  :root {
+    /* 紙のような中立の白。食材と動画サムネイルの色を主役にする */
+    --background: 30 20% 98%;
+    --foreground: 20 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 25% 12%;
+    --primary: 8 74% 46%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 90% 90%;
+    --secondary-foreground: 25 60% 20%;
+    --muted: 30 15% 94%;
+    --muted-foreground: 20 8% 38%;
+    --accent: 30 20% 94%;
+    --accent-foreground: 20 25% 12%;
+    --border: 25 14% 88%;
+    --input: 25 14% 80%;
+    --ring: 8 74% 46%;
+    --radius: 0.625rem;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* 横スクロールはさせるがスクロールバーは出さない（スマホのナビ） */

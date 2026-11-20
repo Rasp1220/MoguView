@@ -2,6 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function SearchBar({
   initialQuery = "",
@@ -28,21 +31,21 @@ export default function SearchBar({
 
   return (
     <form onSubmit={handleSubmit} role="search" className="flex w-full gap-2">
-      <input
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="料理名・タグで検索（例：麻婆豆腐 / 中華）"
-        maxLength={100}
-        aria-label="キーワード"
-        className="w-full min-w-0 rounded-full border border-brand-200 bg-white px-5 py-3 text-base shadow-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-      />
-      <button
-        type="submit"
-        className="flex-shrink-0 whitespace-nowrap rounded-full bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700"
-      >
+      <div className="relative min-w-0 flex-1">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="料理名・タグで検索"
+          maxLength={100}
+          aria-label="キーワード"
+          className="h-12 pl-12 text-base"
+        />
+      </div>
+      <Button type="submit" size="lg" className="flex-shrink-0">
         検索
-      </button>
+      </Button>
     </form>
   );
 }
