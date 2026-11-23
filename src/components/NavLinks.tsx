@@ -1,24 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { Badge as UiBadge } from "@/components/ui/badge";
 import { useMade, useShopping } from "@/lib/localStore";
 
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
-    <span className="ml-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand-600 px-1.5 text-xs font-bold leading-5 text-white">
-      {count}
-    </span>
+    <UiBadge className="ml-1.5 min-w-5 justify-center rounded-full px-1.5">{count}</UiBadge>
   );
 }
 
 export default function NavLinks() {
   const shoppingCount = useShopping().videos.length;
   const madeCount = Object.keys(useMade()).length;
-  const link = "whitespace-nowrap hover:text-brand-600";
+  const link = "whitespace-nowrap rounded-md px-2 py-1.5 transition-colors hover:bg-accent hover:text-foreground";
   // スマホではロゴの下の2段目に置き、収まらなければ横スクロール。sm以上はロゴの右に並べる
   return (
-    <nav className="no-scrollbar -mx-4 flex w-[calc(100%+2rem)] items-center gap-3 overflow-x-auto px-4 text-sm font-medium text-stone-600 sm:mx-0 sm:w-auto sm:gap-4 sm:overflow-visible sm:px-0">
+    <nav className="no-scrollbar -mx-4 flex w-[calc(100%+2rem)] items-center gap-1 overflow-x-auto px-4 text-sm font-medium text-muted-foreground sm:mx-0 sm:w-auto sm:gap-1 sm:overflow-visible sm:px-0">
       <Link href="/search" className={link}>
         さがす
       </Link>

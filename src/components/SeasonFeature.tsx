@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import VideoCard from "./VideoCard";
 import { searchVideos } from "@/lib/videos";
 import type { SeasonFeature as Feature } from "@/lib/seasons";
@@ -27,20 +29,20 @@ export default async function SeasonFeature({ feature }: { feature: Feature }) {
     <section className="space-y-3" aria-labelledby={`season-${feature.id}`}>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h3 id={`season-${feature.id}`} className="text-lg font-bold text-stone-800">
+          <h3 id={`season-${feature.id}`} className="text-lg font-black">
             <span className="mr-1.5" aria-hidden>
               {feature.emoji}
             </span>
             {feature.title}
           </h3>
-          <p className="text-xs text-stone-500">{feature.description}</p>
+          <p className="text-sm text-muted-foreground">{feature.description}</p>
         </div>
-        <Link
-          href={`/search?q=${encodeURIComponent(feature.keywords[0])}`}
-          className="flex-shrink-0 text-sm font-medium text-brand-600 hover:underline"
-        >
-          もっと見る
-        </Link>
+        <Button asChild variant="outline" size="sm" className="flex-shrink-0">
+          <Link href={`/search?q=${encodeURIComponent(feature.keywords[0])}`}>
+            もっと見る
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </Button>
       </div>
 
       <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2">
